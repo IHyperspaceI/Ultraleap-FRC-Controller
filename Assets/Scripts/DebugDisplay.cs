@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class DebugDisplay : MonoBehaviour
 {
@@ -31,24 +32,27 @@ public class DebugDisplay : MonoBehaviour
             "\nRotation: " + manager.getRotation() +
             "\nPose: " + manager.getPose();
 
+
         statusLabel.text = comms.GetStatus();
 
-
-        // Button events
-        enable.onClick.AddListener(ToggleEnabled);
-
-        // Manage enable/disable
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //enabled = true;
-            //ToggleEnabled();
-        }
 
         // Send the data
         if (enabled)
         {
-            string message = "Position: " + manager.getPosition() + ", Rotation: " + manager.getRotation() + ", Pose: " + manager.getPose() + "\n";
-            comms.SendMessageData(message);
+            Data handData = new Data();
+            handData.xPos = manager.getPosition().x;
+            handData.yPos = manager.getPosition().y;
+            handData.zPos = manager.getPosition().z;
+
+            handData.pitch = manager.getRotation().z;
+            handData.roll = manager.getRotation().x;
+            handData.yaw = manager.getRotation().y;
+
+            handData.pose = manager.getPose();
+
+            string json = JsonUtility.ToJson(handData);
+
+            comms.SendMessageData(json + "\n");
         }
     }
 
@@ -65,5 +69,18 @@ public class DebugDisplay : MonoBehaviour
             enable.GetComponent<Image>().color = new Color(50, 210, 50, 255);
             enable.GetComponentInChildren<TextMeshProUGUI>().text = "Disabled";
         }
+    }
+
+    [Serializable]
+    private class Data
+    {
+        public string pose;
+        public double xPos; // Sideways
+        public double yPos; // Height
+        public double zPos; // Forward/back
+
+        public double pitch;
+        public double roll;
+        public double yaw;
     }
 }
